@@ -1,13 +1,10 @@
-# =====================================================
-# BOT DE TELEGRAM + GROQ LLM + TURSO
-# Taller Ciencia de Datos -- EAFIT 2026
 import os, asyncio, datetime
 from dotenv import load_dotenv
 from telegram import Update
 from telegram.ext import (ApplicationBuilder, CommandHandler, MessageHandler,
                            filters, ContextTypes)
 from groq import Groq
-import libsql_client
+import libsql_experimental as libsql
 
 load_dotenv()
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
@@ -18,20 +15,21 @@ TURSO_TOKEN    = os.getenv("TURSO_TOKEN")
 cliente_groq = Groq(api_key=GROQ_API_KEY)
 
 async def inicializar_db():
-    async with libsql_client.create_client(url=TURSO_URL, auth_token=TURSO_TOKEN) as db:
-        await db.execute("""
-            CREATE TABLE IF NOT EXISTS mensajes (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                fecha TEXT, usuario TEXT, user_id INTEGER,
-                pregunta TEXT, respuesta TEXT, tokens INTEGER
-            )""")
+    con = libsql.connect("taller-bot", sync_url=TURSO_URL, auth_token=TURSO_TOKEN)
+    con.execute("""CREATE TABLE IF NOT EXISTS mensajes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        fecha TEXT, usuario TEXT, user_id INTEGER,
+        pregunta TEXT, respuesta TEXT, tokens INTEGER
+    )""")
+    con.commit()
 
 async def guardar_mensaje(usuario, user_id, pregunta, respuesta, tokens):
     fecha = datetime.datetime.now().isoformat()
-    async with libsql_client.create_client(url=TURSO_URL, auth_token=TURSO_TOKEN) as db:
-        await db.execute(
-            "INSERT INTO mensajes (fecha,usuario,user_id,pregunta,respuesta,tokens) VALUES (?,?,?,?,?,?)",
-            [fecha, usuario, user_id, pregunta, respuesta, tokens])
+    con = libsql.connect("taller-bot", sync_url=TURSO_URL, auth_token=TURSO_TOKEN)
+    con.execute(
+        "INSERT INTO mensajes (fecha,usuario,user_id,pregunta,respuesta,tokens) VALUES (?,?,?,?,?,?)",
+        [fecha, usuario, user_id, pregunta, respuesta, tokens])
+    con.commit()
 
 def consultar_llm(pregunta):
     resp = cliente_groq.chat.completions.create(
@@ -66,8 +64,8 @@ async def manejar_mensaje(update: Update, context: ContextTypes.DEFAULT_TYPE):
         respuesta, tokens = consultar_llm(pregunta)
         await guardar_mensaje(usuario, user_id, pregunta, respuesta, tokens)
         await update.message.reply_text(respuesta)
-    except Exception:
-        await update.message.reply_text("Tuve un problema. Intenta de nuevo.")
+    except Exception as e:
+        await update.message.reply_text(f"Tuve un problema: {e}")
 
 async def main():
     await inicializar_db()
