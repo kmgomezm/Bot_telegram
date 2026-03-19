@@ -1,7 +1,11 @@
+# =====================================================
+# BOT DE TELEGRAM + GROQ LLM + TURSO
+# Taller Ciencia de Datos -- EAFIT 2026
 import os, asyncio, datetime
 from dotenv import load_dotenv
 from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
+from telegram.ext import (ApplicationBuilder, CommandHandler, MessageHandler,
+                           filters, ContextTypes)
 from groq import Groq
 import libsql_client
 
@@ -42,11 +46,16 @@ def consultar_llm(pregunta):
 async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     nombre = update.effective_user.first_name
     await update.message.reply_text(
-        f"¡Hola {nombre}!\nSoy tu asistente de ciencia de datos.\nEscríbeme cualquier pregunta.\n\n/ayuda - Ver instrucciones")
+        f"¡Hola {nombre}!\nSoy tu asistente de ciencia de datos.\n"
+        "Escríbeme cualquier pregunta.\n\n/ayuda - Ver instrucciones")
 
 async def cmd_ayuda(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "Puedo responder sobre:\n- Ciencia de datos\n- Machine learning\n- Visualización de datos\n- IA generativa")
+        "Puedo responder sobre:\n"
+        "- Ciencia de datos\n"
+        "- Machine learning\n"
+        "- Visualización de datos\n"
+        "- IA generativa")
 
 async def manejar_mensaje(update: Update, context: ContextTypes.DEFAULT_TYPE):
     usuario = update.effective_user.first_name or "Desconocido"
