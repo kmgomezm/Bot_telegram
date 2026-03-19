@@ -1,7 +1,8 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import os, asyncio, libsql_client
+import os
+import libsql_experimental as libsql
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -14,11 +15,10 @@ st.caption("Análisis de conversaciones del bot de Telegram")
 
 @st.cache_data(ttl=30)
 def cargar_datos():
-    async def _fetch():
-        async with libsql_client.create_client(url=TURSO_URL, auth_token=TURSO_TOKEN) as db:
-            r = await db.execute("SELECT * FROM mensajes ORDER BY fecha DESC LIMIT 1000")
-            return r.rows, r.columns
-    rows, cols = asyncio.run(_fetch())
+    con = libsql.connect("taller-bot", sync_url=TURSO_URL, auth_token=TURSO_TOKEN)
+    con.sync()
+    rows = con.execute("SELECT * FROM mensajes ORDER BY fecha DESC LIMIT 1000").fetchall()
+    cols = ["id","fecha","usuario","user_id","pregunta","respuesta","tokens"]
     if not rows:
         return pd.DataFrame()
     df = pd.DataFrame(rows, columns=cols)
@@ -67,27 +67,8 @@ if st.button("Actualizar"):
 ```
 python-telegram-bot==20.7
 groq==0.4.2
-libsql-client==0.3.1
-streamlit==1.35.0
-pandas==2.2.2
-plotly==5.22.0
+libsql-experimental==0.0.55
+streamlit>=1.35.0
+pandas>=2.0.0
+plotly>=5.0.0
 python-dotenv==1.0.1
-```
-
----
-
-**`.env`** (NO subir a Git)
-```
-TELEGRAM_TOKEN=tu_token_aqui
-GROQ_API_KEY=gsk_tu_clave_aqui
-TURSO_URL=libsql://tu-db.turso.io
-TURSO_TOKEN=eyJtu_token_turso
-```
-
----
-
-**`.gitignore`**
-```
-.env
-__pycache__/
-*.pyc
