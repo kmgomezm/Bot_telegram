@@ -1,6 +1,6 @@
 python-telegram-bot==20.7
 groq==0.4.2
-libsql-experimental==0.0.17
+libsql-experimental==0.0.55
 streamlit>=1.35.0
 pandas>=2.0.0
 plotly>=5.0.0
