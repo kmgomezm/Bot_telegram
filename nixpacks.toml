@@ -1,0 +1,16 @@
+[phases.setup]
+nixPkgs = ["python311"]
+
+[variables]
+NIXPACKS_PYTHON_VERSION = "3.11"
+```
+
+Y actualiza el `requirements.txt` sin versiones fijas para pandas y streamlit (deja que pip resuelva):
+```
+python-telegram-bot==20.7
+groq==0.4.2
+libsql-client==0.3.1
+streamlit>=1.35.0
+pandas>=2.0.0
+plotly>=5.0.0
+python-dotenv==1.0.1
